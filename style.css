@@ -55,6 +55,7 @@ button {
     cursor: pointer;
     transition: background-color 0.3s;
     width: 100%;
+    margin-top: 10px;
 }
 
 button:hover {
@@ -91,20 +92,22 @@ button:hover {
     color: var(--primary-color);
 }
 
-/* NEU: Styling für Einzelansicht */
 #challenge-container {
     padding: 20px 0;
 }
+
 #progress-indicator {
     font-size: 1.1em;
     color: #6c757d;
     margin-bottom: 15px;
 }
+
 #active-challenge-item .symbol {
     font-size: 5em;
     font-weight: bold;
     line-height: 1.2;
 }
+
 #active-challenge-item input {
     width: 100px;
     height: 70px;
@@ -115,6 +118,7 @@ button:hover {
     margin-top: 10px;
     -moz-appearance: textfield;
 }
+
 #active-challenge-item input::-webkit-outer-spin-button,
 #active-challenge-item input::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -128,19 +132,39 @@ button:hover {
     padding: 12px;
     background-color: #f8f9fa;
     border-radius: 8px;
-    margin-bottom: 10px;
+    margin-top: 15px;
     font-size: 1.2em;
 }
+
+.result-details {
+    font-size: 0.9em;
+    color: #6c757d;
+    text-align: right;
+    padding-right: 15px;
+    margin-top: -8px;
+}
+
 .result-item.highlight {
     background-color: #e2f0ff;
     border: 2px solid var(--primary-color);
 }
+
 .result-item span {
     font-weight: bold;
     font-size: 1.3em;
 }
+
 .interpretation-text {
     margin-top: 20px;
     font-style: italic;
     color: #555;
+}
+
+#jokes-container {
+    margin-top: 15px;
+    text-align: left;
+    font-style: italic;
+    color: #555;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
 }
