@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const timerDisplay = document.getElementById('timer');
     const pauseTimerDisplay = document.getElementById('pause-timer');
     const roundTitle = document.getElementById('round-title');
-    const jokesContainer = document.getElementById('jokes-container');
+    const pauseContent = document.getElementById('pause-content');
     
     const progressIndicator = document.getElementById('progress-indicator');
     const activeSymbolDisplay = document.querySelector('#active-challenge-item .symbol');
@@ -22,13 +22,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const SYMBOLS = ['#', '&', '@', '$', '%', '*', '?', '+', '!'];
     const NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
     const TEST_DURATION = 90;
-    const PAUSE_DURATION = 60; // KORREKTUR 3: Pause auf 60 Sekunden erhöht
+    const PAUSE_DURATION = 60; // KORREKTUR: Endlich auf 60 Sekunden
     const TOTAL_SYMBOLS = 100;
-    // KORREKTUR 3: Witze für die Pausen-Ablenkung
     const JOKES = [
         "Fragt die Lehrerin Fritzchen: 'Was ist die Hälfte von acht?' Fritzchen: 'Der obere oder der untere Teil?'",
         "Fritzchen geht zum Bäcker und fragt: 'Haben Sie 100 Brötchen?' Der Bäcker sagt: 'Nein, leider nicht.' Am nächsten Tag wieder. Nach einer Woche sagt der Bäcker stolz: 'Ja, heute habe ich 100 Brötchen da!' Sagt Fritzchen: 'Super, da nehm ich eins.'",
         "Die Mutter sagt zu Fritzchen: 'Zieh dich an, der Bus kommt gleich.' Antwortet Fritzchen: 'Ich weiß, ich hab ihn hupen hören!'"
+    ];
+    const INSTRUCTIONS = [
+        "Bitte lesen Sie den folgenden Witz aufmerksam durch. Lachen Sie danach dreimal laut: Ha-Ha-Ha!",
+        "Sehr gut! Hier kommt der nächste Witz. Gleiche Aufgabe.",
+        "Fantastisch! Ein letzter Witz zur mentalen Lockerung."
     ];
 
     let keyMap = new Map();
@@ -38,7 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let timerInterval, pauseTimerInterval;
     let currentRound = 1;
-    // KORREKTUR 1: scores-Objekt speichert jetzt mehr Details
     let scores = { round1: { score: 0, correct: 0, incorrect: 0 }, round2: { score: 0, correct: 0, incorrect: 0 } };
 
     // === Funktionen ===
@@ -98,7 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function formatTime(seconds) { const mins = Math.floor(seconds / 60).toString().padStart(2, '0'); const secs = (seconds % 60).toString().padStart(2, '0'); return `${mins}:${secs}`; }
 
-    // KORREKTUR 1: Neue Berechnungslogik
     function calculateScore() {
         let correct = 0;
         let incorrect = 0;
@@ -109,11 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 incorrect++;
             }
         }
-        return {
-            score: correct - incorrect,
-            correct: correct,
-            incorrect: incorrect
-        };
+        return { score: correct - incorrect, correct: correct, incorrect: incorrect };
     }
 
     function showScreen(screen) {
@@ -128,8 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
         roundTitle.textContent = `Runde ${currentRound}`;
         userAnswers = [];
         currentSymbolIndex = 0;
-        
-        // KORREKTUR 2: Sequenz wird für Runde 2 neu generiert, aber der Schlüssel bleibt gleich!
         generateChallengeSequence();
         showScreen(testScreen);
         displayCurrentSymbol();
@@ -151,10 +147,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // KORREKTUR 3: Pausenfunktion zeigt Witze an
+    // KORREKTUR: Komplett neue Logik für die Pausen-Sequenz
+    function managePauseSequence() {
+        // Sequenz: 5s Anweisung, 15s Witz, 5s Anweisung, 15s Witz...
+        setTimeout(() => { pauseContent.innerHTML = `<p>${INSTRUCTIONS[0]}</p>`; }, 0);
+        setTimeout(() => { pauseContent.innerHTML = `<p><strong>${JOKES[0]}</strong></p>`; }, 5000);
+        setTimeout(() => { pauseContent.innerHTML = `<p>${INSTRUCTIONS[1]}</p>`; }, 20000);
+        setTimeout(() => { pauseContent.innerHTML = `<p><strong>${JOKES[1]}</strong></p>`; }, 25000);
+        setTimeout(() => { pauseContent.innerHTML = `<p>${INSTRUCTIONS[2]}</p>`; }, 40000);
+        setTimeout(() => { pauseContent.innerHTML = `<p><strong>${JOKES[2]}</strong></p>`; }, 45000);
+    }
+    
     function startPause() {
         showScreen(pauseScreen);
-        jokesContainer.innerHTML = JOKES.map(joke => `<p>${joke}</p>`).join('');
+        managePauseSequence(); // Startet die Witz- und Anweisungssequenz
         
         let pause = PAUSE_DURATION;
         pauseTimerDisplay.textContent = pause;
@@ -169,7 +175,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 
-    // KORREKTUR 1: Ergebnisanzeige aktualisiert
     function showResults() {
         const learningRate = scores.round2.score - scores.round1.score;
         document.getElementById('score1').textContent = scores.round1.score;
@@ -192,7 +197,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === Event Listeners ===
     startButton.addEventListener('click', () => {
-        // KORREKTUR 2: Schlüssel wird nur EINMAL am Anfang generiert
         generateKey(); 
         startRound();
     });
