@@ -12,8 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const timerDisplay = document.getElementById('timer');
     const pauseTimerDisplay = document.getElementById('pause-timer');
     const roundTitle = document.getElementById('round-title');
-
-    // GEÄNDERT: Elemente für die neue Einzelansicht
+    const jokesContainer = document.getElementById('jokes-container');
+    
     const progressIndicator = document.getElementById('progress-indicator');
     const activeSymbolDisplay = document.querySelector('#active-challenge-item .symbol');
     const symbolInput = document.getElementById('symbol-input');
@@ -22,8 +22,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const SYMBOLS = ['#', '&', '@', '$', '%', '*', '?', '+', '!'];
     const NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
     const TEST_DURATION = 90;
-    const PAUSE_DURATION = 10;
-    const TOTAL_SYMBOLS = 100; // Theoretisches Maximum, wenn man sehr schnell ist
+    const PAUSE_DURATION = 60; // KORREKTUR 3: Pause auf 60 Sekunden erhöht
+    const TOTAL_SYMBOLS = 100;
+    // KORREKTUR 3: Witze für die Pausen-Ablenkung
+    const JOKES = [
+        "Fragt die Lehrerin Fritzchen: 'Was ist die Hälfte von acht?' Fritzchen: 'Der obere oder der untere Teil?'",
+        "Fritzchen geht zum Bäcker und fragt: 'Haben Sie 100 Brötchen?' Der Bäcker sagt: 'Nein, leider nicht.' Am nächsten Tag wieder. Nach einer Woche sagt der Bäcker stolz: 'Ja, heute habe ich 100 Brötchen da!' Sagt Fritzchen: 'Super, da nehm ich eins.'",
+        "Die Mutter sagt zu Fritzchen: 'Zieh dich an, der Bus kommt gleich.' Antwortet Fritzchen: 'Ich weiß, ich hab ihn hupen hören!'"
+    ];
 
     let keyMap = new Map();
     let challengeSequence = [];
@@ -32,16 +38,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let timerInterval, pauseTimerInterval;
     let currentRound = 1;
-    let scores = { round1: 0, round2: 0 };
+    // KORREKTUR 1: scores-Objekt speichert jetzt mehr Details
+    let scores = { round1: { score: 0, correct: 0, incorrect: 0 }, round2: { score: 0, correct: 0, incorrect: 0 } };
 
     // === Funktionen ===
     
-    function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-    }
+    function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } }
 
     function generateKey() {
         keyMap.clear();
@@ -57,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // GEÄNDERT: Generiert nur noch die Sequenz, nicht die HTML-Elemente
     function generateChallengeSequence() {
         challengeSequence = [];
         for (let i = 0; i < TOTAL_SYMBOLS; i++) {
@@ -66,59 +67,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // NEU: Zeigt das aktuelle Symbol an
     function displayCurrentSymbol() {
-        if (currentSymbolIndex >= challengeSequence.length) {
-            endRound(); // Ende, wenn alle Symbole durch sind
-            return;
-        }
+        if (currentSymbolIndex >= challengeSequence.length) { endRound(); return; }
         const current = challengeSequence[currentSymbolIndex];
         activeSymbolDisplay.textContent = current.symbol;
-        progressIndicator.textContent = `Symbol ${currentSymbolIndex + 1} / ${TOTAL_SYMBOLS}`;
+        progressIndicator.textContent = `Symbol ${currentSymbolIndex + 1}`;
         symbolInput.value = '';
-        symbolInput.focus(); // Setzt den Cursor direkt ins Feld
+        symbolInput.focus();
     }
     
-    // NEU: Verarbeitet die Eingabe und springt zum nächsten Symbol
     function handleInput() {
         if (symbolInput.value.length > 0) {
             const answer = parseInt(symbolInput.value);
             userAnswers.push(answer);
             currentSymbolIndex++;
-            if (timerInterval) { // Nur weitermachen, wenn der Timer noch läuft
-                displayCurrentSymbol();
-            }
+            if (timerInterval) { displayCurrentSymbol(); }
         }
     }
 
     function startTimer(duration, display, onEnd) {
         let timer = duration;
         display.textContent = formatTime(timer);
-        clearInterval(timerInterval); // Sicherstellen, dass kein alter Timer läuft
+        clearInterval(timerInterval);
         timerInterval = setInterval(() => {
             timer--;
             display.textContent = formatTime(timer);
-            if (timer <= 0) {
-                onEnd();
-            }
+            if (timer <= 0) { onEnd(); }
         }, 1000);
     }
     
-    function formatTime(seconds) {
-        const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-        const secs = (seconds % 60).toString().padStart(2, '0');
-        return `${mins}:${secs}`;
-    }
+    function formatTime(seconds) { const mins = Math.floor(seconds / 60).toString().padStart(2, '0'); const secs = (seconds % 60).toString().padStart(2, '0'); return `${mins}:${secs}`; }
 
-    // GEÄNDERT: Zählt die korrekten Antworten aus dem 'userAnswers' Array
+    // KORREKTUR 1: Neue Berechnungslogik
     function calculateScore() {
-        let score = 0;
+        let correct = 0;
+        let incorrect = 0;
         for (let i = 0; i < userAnswers.length; i++) {
             if (userAnswers[i] === challengeSequence[i].correct) {
-                score++;
+                correct++;
+            } else {
+                incorrect++;
             }
         }
-        return score;
+        return {
+            score: correct - incorrect,
+            correct: correct,
+            incorrect: incorrect
+        };
     }
 
     function showScreen(screen) {
@@ -134,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
         userAnswers = [];
         currentSymbolIndex = 0;
         
-        generateKey();
+        // KORREKTUR 2: Sequenz wird für Runde 2 neu generiert, aber der Schlüssel bleibt gleich!
         generateChallengeSequence();
         showScreen(testScreen);
         displayCurrentSymbol();
@@ -143,21 +138,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function endRound() {
         clearInterval(timerInterval);
-        timerInterval = null; // Stoppt den Timer und verhindert weitere Eingaben
+        timerInterval = null;
         
-        const score = calculateScore();
+        const roundResult = calculateScore();
         if (currentRound === 1) {
-            scores.round1 = score;
+            scores.round1 = roundResult;
             currentRound = 2;
             startPause();
         } else {
-            scores.round2 = score;
+            scores.round2 = roundResult;
             showResults();
         }
     }
     
+    // KORREKTUR 3: Pausenfunktion zeigt Witze an
     function startPause() {
         showScreen(pauseScreen);
+        jokesContainer.innerHTML = JOKES.map(joke => `<p>${joke}</p>`).join('');
+        
         let pause = PAUSE_DURATION;
         pauseTimerDisplay.textContent = pause;
         clearInterval(pauseTimerInterval);
@@ -171,35 +169,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 
+    // KORREKTUR 1: Ergebnisanzeige aktualisiert
     function showResults() {
-        const learningRate = scores.round2 - scores.round1;
-        document.getElementById('score1').textContent = scores.round1;
-        document.getElementById('score2').textContent = scores.round2;
+        const learningRate = scores.round2.score - scores.round1.score;
+        document.getElementById('score1').textContent = scores.round1.score;
+        document.getElementById('details1').textContent = `(${scores.round1.correct} richtige / ${scores.round1.incorrect} falsche)`;
+        
+        document.getElementById('score2').textContent = scores.round2.score;
+        document.getElementById('details2').textContent = `(${scores.round2.correct} richtige / ${scores.round2.incorrect} falsche)`;
+        
         document.getElementById('learning-rate').textContent = learningRate > 0 ? `+${learningRate}` : learningRate;
 
         let interpretationText = "";
-        if (learningRate > 8) {
-            interpretationText = "Exzellente Verbesserung! Dein Gehirn hat die neuen Verbindungen extrem schnell gelernt und automatisiert.";
-        } else if (learningRate > 4) {
-            interpretationText = "Sehr gut! Du hast dich deutlich verbessert, was auf eine solide und schnelle Lernfähigkeit hindeutet.";
-        } else if (learningRate >= 0) {
-            interpretationText = "Gut gemacht! Jeder Fortschritt zeigt, dass Lernprozesse stattgefunden haben.";
-        } else {
-            interpretationText = "Interessant! Manchmal beeinflussen Konzentration oder Müdigkeit die Leistung. Probiere es doch noch einmal!";
-        }
+        if (learningRate > 8) { interpretationText = "Exzellente Verbesserung! Dein Gehirn hat die neuen Verbindungen extrem schnell gelernt und automatisiert."; } 
+        else if (learningRate > 4) { interpretationText = "Sehr gut! Du hast dich deutlich verbessert, was auf eine solide und schnelle Lernfähigkeit hindeutet."; } 
+        else if (learningRate >= 0) { interpretationText = "Gut gemacht! Jeder Fortschritt zeigt, dass Lernprozesse stattgefunden haben."; } 
+        else { interpretationText = "Interessant! Manchmal beeinflussen Konzentration oder Müdigkeit die Leistung. Probiere es doch noch einmal!"; }
         document.getElementById('interpretation').textContent = interpretationText;
 
         showScreen(resultsScreen);
     }
 
     // === Event Listeners ===
-    startButton.addEventListener('click', startRound);
+    startButton.addEventListener('click', () => {
+        // KORREKTUR 2: Schlüssel wird nur EINMAL am Anfang generiert
+        generateKey(); 
+        startRound();
+    });
+
     restartButton.addEventListener('click', () => {
         currentRound = 1;
-        scores = { round1: 0, round2: 0 };
+        scores = { round1: { score: 0, correct: 0, incorrect: 0 }, round2: { score: 0, correct: 0, incorrect: 0 } };
         showScreen(startScreen);
     });
-    // NEU: Event Listener für die Eingabe
+    
     symbolInput.addEventListener('input', handleInput);
 });
-
