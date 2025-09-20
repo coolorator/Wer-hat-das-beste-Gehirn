@@ -160,11 +160,16 @@ button:hover {
     color: #555;
 }
 
-#jokes-container {
+#pause-content {
     margin-top: 15px;
     text-align: left;
     font-style: italic;
     color: #555;
     border-top: 1px solid #eee;
     padding-top: 15px;
+    min-height: 100px;
+}
+
+#pause-content p {
+    margin: 5px 0;
 }
