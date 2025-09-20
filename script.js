@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const SYMBOLS = ['#', '&', '@', '$', '%', '*', '?', '+', '!'];
     const NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
     const TEST_DURATION = 90;
-    const PAUSE_DURATION = 60; // KORREKTUR: Endlich auf 60 Sekunden
+    const PAUSE_DURATION = 60; // DEFINITIVE KORREKTUR: Wert ist jetzt 60.
     const TOTAL_SYMBOLS = 100;
     const JOKES = [
         "Fragt die Lehrerin Fritzchen: 'Was ist die Hälfte von acht?' Fritzchen: 'Der obere oder der untere Teil?'",
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         roundTitle.textContent = `Runde ${currentRound}`;
         userAnswers = [];
         currentSymbolIndex = 0;
-        generateChallengeSequence();
+        generateChallengeSequence(); // Die Sequenz der Symbole wird neu gemischt
         showScreen(testScreen);
         displayCurrentSymbol();
         startTimer(TEST_DURATION, timerDisplay, endRound);
@@ -147,9 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // KORREKTUR: Komplett neue Logik für die Pausen-Sequenz
     function managePauseSequence() {
-        // Sequenz: 5s Anweisung, 15s Witz, 5s Anweisung, 15s Witz...
         setTimeout(() => { pauseContent.innerHTML = `<p>${INSTRUCTIONS[0]}</p>`; }, 0);
         setTimeout(() => { pauseContent.innerHTML = `<p><strong>${JOKES[0]}</strong></p>`; }, 5000);
         setTimeout(() => { pauseContent.innerHTML = `<p>${INSTRUCTIONS[1]}</p>`; }, 20000);
@@ -160,15 +158,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function startPause() {
         showScreen(pauseScreen);
-        managePauseSequence(); // Startet die Witz- und Anweisungssequenz
+        managePauseSequence();
         
         let pause = PAUSE_DURATION;
         pauseTimerDisplay.textContent = pause;
         clearInterval(pauseTimerInterval);
         pauseTimerInterval = setInterval(() => {
             pause--;
-            pauseTimerDisplay.textContent = pause;
-            if (pause <= 0) {
+            if(pause >= 0) {
+               pauseTimerDisplay.textContent = pause;
+            }
+            if (pause < 0) {
                 clearInterval(pauseTimerInterval);
                 startRound();
             }
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('score2').textContent = scores.round2.score;
         document.getElementById('details2').textContent = `(${scores.round2.correct} richtige / ${scores.round2.incorrect} falsche)`;
         
-        document.getElementById('learning-rate').textContent = learningRate > 0 ? `+${learningRate}` : learningRate;
+        document.getElementById('learning-rate').textContent = learningRate >= 0 ? `+${learningRate}` : learningRate;
 
         let interpretationText = "";
         if (learningRate > 8) { interpretationText = "Exzellente Verbesserung! Dein Gehirn hat die neuen Verbindungen extrem schnell gelernt und automatisiert."; } 
@@ -197,12 +197,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === Event Listeners ===
     startButton.addEventListener('click', () => {
+        // DEFINITIVE KORREKTUR: generateKey() wird NUR HIER EINMALIG aufgerufen.
         generateKey(); 
+        currentRound = 1; // Sicherstellen, dass ein Neustart immer mit Runde 1 beginnt
         startRound();
     });
 
     restartButton.addEventListener('click', () => {
-        currentRound = 1;
         scores = { round1: { score: 0, correct: 0, incorrect: 0 }, round2: { score: 0, correct: 0, incorrect: 0 } };
         showScreen(startScreen);
     });
